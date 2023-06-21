@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import Search from './components/Search';
 import Weather from './components/Weather';
@@ -7,12 +7,13 @@ function App() {
   const [location, setLocation] = useState(''); // 검색어
   const [weather, setWeather] = useState(null); // 날씨 데이터 null 값이 비었음을 명시적 선언
   const [errFlg, setErrFlg] = useState(false);
+  const [name, setName] = useState('');
 
   // 날씨 요청 함수
   const fetchWeather = () => {
     
-    const apiKey = 'Put your API KEY here';
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}`;
+    const apiKey = import.meta.env.VITE_API_KEY;
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&lang=kr`;
 
     fetch(url)
       .then(res => res.json())  // json포맷으로 변환
@@ -22,9 +23,9 @@ function App() {
           setErrFlg(true);
           return;
         }
+        console.log(data);
         setWeather(data);
         setErrFlg(false);
-        console.log(weather);
       })
       .catch(() => {
         console.log('error');
@@ -38,12 +39,38 @@ function App() {
   const handleWeatherSearch = (e) => {
     // 전송 이벤트 취소(새로고침 방지)
     e.preventDefault();
-    console.log(`${location} 검색어로 검색 : `);
     fetchWeather();
   }
 
+  useEffect(() => {
+    if(weather != null) {
+      switch(weather.weather[0].main) {
+        case 'Clear':
+          setName('sunny')
+          break;
+        case 'Rain':
+          setName('rainy')
+          break;
+        case 'Drizzle':
+          setName('rainy')
+          break;
+        case 'Clouds':
+        setName('cloudy')
+        break;
+        case 'Mist':
+          setName('cloudy')
+          break;
+        case 'Snow':
+        setName('snowy')
+        break;
+        default:
+          setName(null)
+      }
+    }
+  }, [weather])
+
   return (
-    <div className="App">
+    <div className={'App' + ` ${name}`}>
       <h1>Weather App</h1>
         <Search 
           handleWeatherSearch={handleWeatherSearch}
